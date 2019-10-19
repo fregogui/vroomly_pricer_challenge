@@ -3,7 +3,7 @@ import csv
 vehicle ="77752"
 intervention="front_brake_pads"
 
-#Parse article_vehicle_relations file and store the result in a dict. It is not necessary if we need only one request but it will be helpfull to extend 
+##Parse article_vehicle_relations file and store the result in a dict. It is not necessary if we need only one request but it will be helpfull to extend 
 
 articleByVehicle={}
 
