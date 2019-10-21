@@ -8,23 +8,39 @@ def compute_price(vehicle, intervention):
         return compute_price_front_brake_rotors_and_pads(vehicle)
     if intervention == "oil_change":
         return compute_price_oil_change(vehicle)
+    if intervention == "injectors":
+        return compute_price_injectors(vehicle)
+    else:
+        return "Sorry, " + intervention + " is not yet supported"
 
 
 def compute_price_front_brake_pads(vehicle):
     article_ids = get_article_ids(vehicle, "brake_pad")
-    return 4 * get_median_price(article_ids, 4)
+    #To simplify the order, we impose articles with by 4 brake pads(In this case, the distributors respect this rules)
+    return get_median_price(article_ids, 4)
 
 def compute_price_front_brake_rotors_and_pads(vehicle):
     article_ids_rotors = get_article_ids(vehicle, "brake_rotor")
     article_ids_brake_pad = get_article_ids(vehicle, "brake_pad")
-    return 2 * get_median_price(article_ids_rotors, 2) + 4 * get_median_price(article_ids_brake_pad, 4)
+    #To simplify the order, we impose articles with by 4 brake pads or 2 brake rotors (In this case, the distributors respect this rules)
+    return get_median_price(article_ids_rotors, 2) + get_median_price(article_ids_brake_pad, 4)
 
 def compute_price_oil_change(vehicle):
     year = int(list(vehicles[vehicles["id"] == vehicle]["production_start"])[0][:4])
-    motor_oil_volume = (list(vehicles[vehicles["id"] == vehicle]["motor_oil_volume"])[0])
+    motor_oil_volume = list(vehicles[vehicles["id"] == vehicle]["motor_oil_volume"])[0]
     oil_volumic_price = get_oil_volumic_price(year)
     return motor_oil_volume * oil_volumic_price + get_median_price(get_article_ids(vehicle,"fuel_filter"),1)
 
+def compute_price_injectors(vehicle):
+    cylinder_count = int(list(vehicles[vehicles["id"] == vehicle]["cylinder_count"])[0])
+    fuel_type = list(vehicles[vehicles["id"] == vehicle]["fuel_type"])[0]
+    print(cylinder_count, fuel_type)
+    if fuel_type == "essence":
+        return cylinder_count * get_median_price(get_article_ids(vehicle,"petrol_fuel_injector"),1)
+    elif fuel_type == "diesel":
+        return cylinder_count * get_median_price(get_article_ids(vehicle,"diesel_fuel_injector"),1)
+    else:
+        return "There is a problem with the fuel type"
 
 def get_article_ids(vehicle, type):
     articles_compatible = relations[relations["vehicle_id"] == vehicle]
@@ -79,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument('--intervention')
     parser.add_argument('--vehicle', type=int)
     args = parser.parse_args()
-
-
     price = compute_price(args.vehicle, args.intervention)
-    print("Le prix : {}".format(str(price)))
+    model = list(vehicles[vehicles["id"] == args.vehicle]["model"])[0]
+    manufacturer = list(vehicles[vehicles["id"] == args.vehicle]["manufacturer"])[0]
+    print("Model : %s | Manufacturer : %s | Intervention : %s | Price : %s €" %(model,manufacturer,args.intervention,price))
